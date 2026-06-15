@@ -14,8 +14,8 @@ resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = cidrsubnet(aws_vpc.main.cidr_block, 4, count.index)
   # Hardcode to use the first two zones passed by the variable
-  # availability_zone       = var.availability_zones[count.index]
-  availability_zone       = data.aws_availability_zones.available.names[count.index]
+  availability_zone       = var.availability_zones[count.index]
+  # availability_zone       = data.aws_availability_zones.available.names[count.index]
   map_public_ip_on_launch = true
   tags                    = merge(var.tags, { Name = "${var.prefix}-public-subnet-${count.index}" })
 }

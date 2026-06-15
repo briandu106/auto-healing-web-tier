@@ -33,7 +33,7 @@ module "compute" {
   prefix         = var.prefix
   vpc_id         = module.networking.vpc_id
   public_subnets = module.networking.public_subnet_ids
-  ami_id           = "ami-mock1234567890" # Pass a sample string for the Terraform plan to proceed
+  ami_id         = "ami-mock1234567890" # Pass a sample string for the Terraform plan to proceed
   # ami_id           = data.aws_ami.ubuntu.id
   user_data_base64 = base64encode(file("${path.module}/templates/user_data.sh"))
   tags             = var.tags
