@@ -34,21 +34,21 @@ jobs:
         run: terraform fmt -check
 
       # 4. Authenticate via Traditional Static Secrets
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+      #- name: Configure AWS Credentials
+      #  uses: aws-actions/configure-aws-credentials@v4
+      #  with:
+      #    aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #    aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #    aws-region: ${{ env.AWS_REGION }}
 
-      # 5. Initialize modules and remote S3 backend
-      - name: Terraform Init
-        run: terraform init
+      # 4. Initialize completely offline without backend 
+      - name: Terraform Init (Offline)
+        run: terraform init -backend=false
 
-      # 6. Validate configuration syntax
+      # 5. Validate configuration syntax
       - name: Terraform Validate
         run: terraform validate
 
-      # 7. Generate execution plan (Runs on both direct pushes to main and PRs)
+      # 6. Generate execution plan (Runs on both direct pushes to main and PRs)
       - name: Terraform Plan
         run: terraform plan -no-color
