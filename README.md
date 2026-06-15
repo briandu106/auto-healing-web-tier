@@ -10,6 +10,75 @@ AWS is selected for this footprint because of the operational efficiency of its 
 * **N+1 Fault Tolerance:** The design forces a minimum size of 2 instances mapped across unique Availability Zones. If instance `A` drops, instance `B` handles 100% of the traffic without downtime.
 * **Auto-Healing Loop:** The ASG evaluates the EC2 state via `ELB` target group health status. If a container drops or a VM is terminated manually, the target becomes unhealthy, the ASG terminates the stale node, and provisions a brand new instance instantly via the `user_data.sh` immutable definition.
 
+## Architecture Diagram
+                      [ Public Internet ]
+                              │
+                              ▼
+                    [ Internet Gateway ]
+                              │
+                              ▼
+                      [ Public Route Table ]
+                              │
+           ┌──────────────────┴──────────────────┐
+           ▼                                     ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ ap-southeast-4 (Melbourne Region) - VPC                                │
+│                                                                        │
+│  ┌──────────────────────────────┐    ┌──────────────────────────────┐  │
+│  │ Availability Zone A          │    │ Availability Zone B          │  │
+│  │                              │    │                              │  │
+│  │ ┌──────────────────────────┐ │    │ ┌──────────────────────────┐ │  │
+│  │ │ Public Subnet 1          │ │    │ │ Public Subnet 2          │ │  │
+│  │ │ (10.0.1.0/24)            │ │    │ │ (10.0.2.0/24)            │ │  │
+│  │ │                          │ │    │ │                          │ │  │
+│  │ │  ┌────────────────────┐  │ │    │ │  ┌────────────────────┐  │ │  │
+│  │ │  │   Application      │◀─┼─┼────┼─┼─▶│   Application      │  │ │  │
+│  │ │  │   Load Balancer    │  │ │    │ │  │   Load Balancer    │  │ │  │
+│  │ │  │   (Node 1)         │  │ │    │ │  │   (Node 2)         │  │ │  │
+│  │ │  └─────────┬──────────┘  │ │    │ │  └─────────┬──────────┘  │ │  │
+│  │ │            │ (Port 80)   │ │    │ │            │ (Port 80)   │ │  │
+│  │ └────────────┼─────────────┘ │    │ └────────────┼─────────────┘  │
+│  └──────────────┼───────────────┘    └──────────────┼────────────────┘
+│                 │                                   │                   
+│                 └─────────────────┬─────────────────┘                   
+│                                   ▼                                     
+│                     [ ALB Target Group: Port 80 ]                       
+│                                   │                                     
+│     ┌─────────────────────────────┴─────────────────────────────┐       
+│     ▼                                                           ▼       
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │ Auto Scaling Group (Desired: 2 / Max: 4)                        │   │
+│  │                                                                 │   │
+│  │  ┌──────────────────────────────┐    ┌─────────────────────────┐│   │
+│  │  │ EC2 Web Instance (Node 1)    │    │ EC2 Web Instance (Node 2││   │
+│  │  │                              │    │                         ││   │
+│  │  │  ┌────────────────────────┐  │    │  ┌────────────────────┐ ││   │
+│  │  │  │ Host Network Stack     │  │    │  │ Host Network Stack │ ││   │
+│  │  │  │                        │  │    │  │                    │ ││   │
+│  │  │  │ ┌────────────────────┐ │  │    │  │ ┌────────────────┐ ││   │
+│  │  │  │ │ NGINX Container    │ │  │    │  │ │ NGINX Container│ ││   │
+│  │  │  │ │ (Port 80:80)       │ │  │    │  │ │ (Port 80:80)   │ ││   │
+│  │  │  │ └────────────────────┘ │  │    │  │ └────────────────┘ ││   │
+│  │  │  └────────────────────────┘  │    │  └────────────────────┘ ││   │
+│  │  └──────────────────────────────┘    └─────────────────────────┘│   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+└────────────────────────────────────────────────────────────────────────┘
+                                    ▲
+                                    │ (Outbound image pull over HTTPS)
+                                    │
+                         [ GitHub Container Registry ]
+                         (ghcr.io/briandu106/nginx-autoscale)
+
+## Build and push contaaner image to GHCR
+```bash
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t ghcr.io/briandu106/nginx-autoscale:latest \
+  --push .docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t ghcr.io/briandu106/nginx-autoscale:latest \
+  --push .
+
 ## Estimated Monthly Cost (AUD)
 Optimized strictly under the **AUD $20 / month** target limit using AWS Free Tier elegibility/low-cost components where applicable:
 
@@ -34,14 +103,17 @@ Optimized strictly under the **AUD $20 / month** target limit using AWS Free Tie
 #### Deployment Steps
 * Clone the code
 * Export sample AWS credentials
-`export AWS_ACCESS_KEY_ID="sample-key"
-export AWS_SECRET_ACCESS_KEY="sample-secret"`
+```bash
+export AWS_ACCESS_KEY_ID="sample-key"
+export AWS_SECRET_ACCESS_KEY="sample-secret"
 * Run a live test
-`terraform init   
-terraform plan`   # This will print out the list of all AWS resources that are to be created
+```bash
+terraform init   
+terraform plan   # This will print out the list of all AWS resources that are to be created
 
 ### From GitHub Actions
 * Create repositoy variables:
 AWS_ACCESS_KEY_ID="sample_key"
 AWS_SECRET_ACCESS_KEY="sample-secret"
-* 
+AWS_REGION=""ap-southeast-4"
+* The pipeline will be automatically be executed.
