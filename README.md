@@ -59,7 +59,20 @@ terraform plan   # This will print out the list of all AWS resources that are to
 ```
 ### From GitHub Actions
 * Create repositoy secrets:
-AWS_ACCESS_KEY_ID="sample_key"
-AWS_SECRET_ACCESS_KEY="sample-secret"
-AWS_REGION=""ap-southeast-4"
+
+| Secret Name | Secret Value |
+| :--- | :--- |
+| **AWS_ACCESS_KEY_ID** | sample-key |
+| **AWS_SECRET_ACCESS_KEY** | sample-secret |
+| **AWS_REGION** | sample-region |
+
 * The pipeline will be automatically be executed.
+
+## How to Test
+Once `terraform apply` finishes, it will output the `alb_dns_name`.
+
+1. **Verify Traffic:** Run a curl loop to see the active page:
+   `while true; do curl -s http://<YOUR_ALB_DNS_NAME>/; sleep 1; done`
+2. **Simulate a Failure:** Open a second terminal and terminate one of the EC2 instances via the AWS CLI or Console:
+   `aws ec2 terminate-instances --instance-ids <instance_ID>`
+3. **Observe:** In the first terminal, you will see a brief moment of traffic routing exclusively to the surviving instance (Zero Downtime). Within 1-2 minutes, AWS ASG will automatically spin up a replacement node, provision the Docker container via cloud-init, and attach it back to the load balancer.
