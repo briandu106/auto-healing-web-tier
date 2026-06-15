@@ -13,12 +13,9 @@ AWS is selected for this footprint because of the operational efficiency of its 
 ## Architecture Diagram
 Please see the image file named architecture_diagram.png.
 
-## Build and push contaaner image to GHCR
+## Build and push container image to GHCR
 ```bash
 docker buildx build \
-  --platform linux/amd64,linux/arm64 \
-  -t ghcr.io/briandu106/nginx-autoscale:latest \
-  --push .docker buildx build \
   --platform linux/amd64,linux/arm64 \
   -t ghcr.io/briandu106/nginx-autoscale:latest \
   --push .
