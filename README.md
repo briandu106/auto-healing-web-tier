@@ -11,63 +11,7 @@ AWS is selected for this footprint because of the operational efficiency of its 
 * **Auto-Healing Loop:** The ASG evaluates the EC2 state via `ELB` target group health status. If a container drops or a VM is terminated manually, the target becomes unhealthy, the ASG terminates the stale node, and provisions a brand new instance instantly via the `user_data.sh` immutable definition.
 
 ## Architecture Diagram
-                      [ Public Internet ]
-                              │
-                              ▼
-                    [ Internet Gateway ]
-                              │
-                              ▼
-                      [ Public Route Table ]
-                              │
-           ┌──────────────────┴──────────────────┐
-           ▼                                     ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│ ap-southeast-4 (Melbourne Region) - VPC                                │
-│                                                                        │
-│  ┌──────────────────────────────┐    ┌──────────────────────────────┐  │
-│  │ Availability Zone A          │    │ Availability Zone B          │  │
-│  │                              │    │                              │  │
-│  │ ┌──────────────────────────┐ │    │ ┌──────────────────────────┐ │  │
-│  │ │ Public Subnet 1          │ │    │ │ Public Subnet 2          │ │  │
-│  │ │ (10.0.1.0/24)            │ │    │ │ (10.0.2.0/24)            │ │  │
-│  │ │                          │ │    │ │                          │ │  │
-│  │ │  ┌────────────────────┐  │ │    │ │  ┌────────────────────┐  │ │  │
-│  │ │  │   Application      │◀─┼─┼────┼─┼─▶│   Application      │  │ │  │
-│  │ │  │   Load Balancer    │  │ │    │ │  │   Load Balancer    │  │ │  │
-│  │ │  │   (Node 1)         │  │ │    │ │  │   (Node 2)         │  │ │  │
-│  │ │  └─────────┬──────────┘  │ │    │ │  └─────────┬──────────┘  │ │  │
-│  │ │            │ (Port 80)   │ │    │ │            │ (Port 80)   │ │  │
-│  │ └────────────┼─────────────┘ │    │ └────────────┼─────────────┘  │
-│  └──────────────┼───────────────┘    └──────────────┼────────────────┘
-│                 │                                   │                   
-│                 └─────────────────┬─────────────────┘                   
-│                                   ▼                                     
-│                     [ ALB Target Group: Port 80 ]                       
-│                                   │                                     
-│     ┌─────────────────────────────┴─────────────────────────────┐       
-│     ▼                                                           ▼       
-│  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │ Auto Scaling Group (Desired: 2 / Max: 4)                        │   │
-│  │                                                                 │   │
-│  │  ┌──────────────────────────────┐    ┌─────────────────────────┐│   │
-│  │  │ EC2 Web Instance (Node 1)    │    │ EC2 Web Instance (Node 2││   │
-│  │  │                              │    │                         ││   │
-│  │  │  ┌────────────────────────┐  │    │  ┌────────────────────┐ ││   │
-│  │  │  │ Host Network Stack     │  │    │  │ Host Network Stack │ ││   │
-│  │  │  │                        │  │    │  │                    │ ││   │
-│  │  │  │ ┌────────────────────┐ │  │    │  │ ┌────────────────┐ ││   │
-│  │  │  │ │ NGINX Container    │ │  │    │  │ │ NGINX Container│ ││   │
-│  │  │  │ │ (Port 80:80)       │ │  │    │  │ │ (Port 80:80)   │ ││   │
-│  │  │  │ └────────────────────┘ │  │    │  │ └────────────────┘ ││   │
-│  │  │  └────────────────────────┘  │    │  └────────────────────┘ ││   │
-│  │  └──────────────────────────────┘    └─────────────────────────┘│   │
-│  └─────────────────────────────────────────────────────────────────┘   │
-└────────────────────────────────────────────────────────────────────────┘
-                                    ▲
-                                    │ (Outbound image pull over HTTPS)
-                                    │
-                         [ GitHub Container Registry ]
-                         (ghcr.io/briandu106/nginx-autoscale)
+Please see the image file named architecture_diagram.png.
 
 ## Build and push contaaner image to GHCR
 ```bash
