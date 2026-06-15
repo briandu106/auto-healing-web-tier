@@ -22,6 +22,7 @@ docker buildx build \
   --platform linux/amd64,linux/arm64 \
   -t ghcr.io/briandu106/nginx-autoscale:latest \
   --push .
+```
 
 ## Estimated Monthly Cost (AUD)
 Optimized strictly under the **AUD $20 / month** target limit using AWS Free Tier elegibility/low-cost components where applicable:
@@ -50,13 +51,14 @@ Optimized strictly under the **AUD $20 / month** target limit using AWS Free Tie
 ```bash
 export AWS_ACCESS_KEY_ID="sample-key"
 export AWS_SECRET_ACCESS_KEY="sample-secret"
+```
 * Run a live test
 ```bash
 terraform init   
 terraform plan   # This will print out the list of all AWS resources that are to be created
-
+```
 ### From GitHub Actions
-* Create repositoy variables:
+* Create repositoy secrets:
 AWS_ACCESS_KEY_ID="sample_key"
 AWS_SECRET_ACCESS_KEY="sample-secret"
 AWS_REGION=""ap-southeast-4"
